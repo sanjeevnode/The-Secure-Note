@@ -13,6 +13,15 @@ The application implements a multi-layered security approach to protect user dat
 4. **Encryption Algorithm**: AES-GCM (Galois/Counter Mode) for authenticated encryption
 5. **Key Derivation**: Argon2 used for secure key generation
 
+## Request and Response Flow
+
+The individual fields of the request and response are encrypted using the AES-GCM algorithm. The encryption key will be stored at frontend and backend. The key will be used to encrypt and decrypt the data.
+1. **Field-Level Encryption**: Each field in the request and response is encrypted individually using AES-GCM, ensuring that even if one part of the data is compromised, the rest remains secure.
+2. **Symmetric Key Storage**: The encryption key is stored securely at both the frontend and backend, allowing for seamless encryption and decryption of data during transmission.
+3. **Authenticated Encryption**: AES-GCM provides both encryption and authentication, ensuring data integrity and confidentiality.
+4. **Key Management**: Proper key management practices are followed to store and protect the encryption keys at both ends.
+5. **Data Security**: Encrypting individual fields enhances the overall security of the data, making it more resistant to unauthorized access and tampering
+
 ## User Registration and Authentication Flow
 
 ### Registration Process

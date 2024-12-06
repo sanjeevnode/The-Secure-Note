@@ -1,119 +1,140 @@
-# Password Manager Application: Architecture and Security Mechanisms
+# The Secure Note - Password Manager Application
 
-## Overview
+## Basic Use and Key Features
 
-This document provides an in-depth explanation of the password manager application's architecture, focusing on its robust security mechanisms for storing and retrieving encrypted notes.
+### Purpose
 
-## Core Security Principles
+The Secure Note is a robust password manager application designed to securely store and manage user notes and passwords. It employs advanced encryption techniques to ensure data security and integrity.
 
-The application implements a multi-layered security approach to protect user data:
-1. **Password Hashing**: User passwords are securely hashed before storage
-2. **Request Encryption**: Frontend uses a secret key to encrypt request data
-3. **End-to-End Encryption**: Notes are encrypted using the user's password
-4. **Encryption Algorithm**: AES-GCM (Galois/Counter Mode) for authenticated encryption
-5. **Key Derivation**: Argon2 used for secure key generation
+### Key Features
 
-## Request and Response Flow
+1. **Email Verification**:
+   - Ensures users verify their email during registration.
+2. **Master Password Setup**:
+   - Adds an additional layer of security for decrypting sensitive data.
+3. **Login Timeout Mechanism**:
+   - Temporarily locks accounts after multiple failed login attempts with an exponential backoff time.
+4. **End-to-End Encryption**:
+   - Notes and sensitive data are encrypted using AES-256-GCM with authenticated encryption.
+5. **Token-Based Authentication**:
+   - Supports access tokens (short-lived) and refresh tokens (24-hour expiration) for secure session management.
 
-The individual fields of the request and response are encrypted using the AES-GCM algorithm. The encryption key will be stored at frontend and backend. The key will be used to encrypt and decrypt the data.
-1. **Field-Level Encryption**: Each field in the request and response is encrypted individually using AES-GCM, ensuring that even if one part of the data is compromised, the rest remains secure.
-2. **Symmetric Key Storage**: The encryption key is stored securely at both the frontend and backend, allowing for seamless encryption and decryption of data during transmission.
-3. **Authenticated Encryption**: AES-GCM provides both encryption and authentication, ensuring data integrity and confidentiality.
-4. **Key Management**: Proper key management practices are followed to store and protect the encryption keys at both ends.
-5. **Data Security**: Encrypting individual fields enhances the overall security of the data, making it more resistant to unauthorized access and tampering
-
-## User Registration and Authentication Flow
-
-### Registration Process
-1. User provides username, email, and password
-2. Password is hashed using a secure hashing algorithm (e.g., bcrypt or Argon2)
-3. Hashed password and user details are stored in the `User` table
-4. A unique salt is used during hashing to prevent rainbow table attacks
-
-### Login Process
-1. User submits username and password
-2. Backend retrieves the stored hashed password
-3. Submitted password is hashed and compared with stored hash
-4. If credentials are valid, a JWT (JSON Web Token) is generated
-5. Token is sent to frontend for subsequent authenticated requests
-
-## Note Encryption Workflow
-
-### Note Creation
-1. Frontend Encryption Stage
-   - User enters note title and description
-   - Frontend encrypts request data using a predefined secret key
-   - Encrypted data is sent to backend
-
-2. Backend Decryption and Processing
-   - Backend decrypts the incoming request
-   - Validates user credentials
-   - Retrieves user's original password
-   - Derives encryption key using Argon2
-     - Input: User's original password
-     - Purpose: Generate a cryptographically secure key
-
-3. Note Encryption
-   - Uses AES-GCM for authenticated encryption
-   - Inputs:
-     - Plaintext description
-     - Derived key
-   - Outputs:
-     - Ciphertext
-     - Authentication Tag
-     - Nonce (Number used once)
-   - Concatenates ciphertext + tag + nonce
-   - Stores result in `Notes` table
-
-### Note Retrieval
-1. Fetch encrypted note from database
-2. Separate concatenated string into:
-   - Ciphertext
-   - Tag
-   - Nonce
-3. Derive key using same Argon2 process
-4. Decrypt using AES-GCM
-5. Return decrypted note to frontend
+---
 
 ## Database Schema
 
 ### `User` Table
-| Field      | Type    | Description                      |
-|------------|---------|----------------------------------|
-| `id`       | INT     | Unique user identifier           |
-| `username` | VARCHAR | User's username                  |
-| `email`    | VARCHAR | User's email address             |
-| `password` | VARCHAR | Securely hashed user password    |
+
+| Field             | Type    | Description                              |
+| ----------------- | ------- | ---------------------------------------- |
+| `id`              | INT     | Unique user identifier.                  |
+| `email`           | VARCHAR | User's email address.                    |
+| `username`        | VARCHAR | Unique username .                        |
+| `email_verified`  | BOOLEAN | Indicates whether the email is verified. |
+| `password`        | VARCHAR | Hashed password of the user.             |
+| `master_password` | VARCHAR | Hashed master password.                  |
+
+### `Metadata` Table
+
+| Field                      | Type      | Description                                 |
+| -------------------------- | --------- | ------------------------------------------- |
+| `user_id`                  | INT       | Foreign key referencing `User` table.       |
+| `refresh_token`            | VARCHAR   | Secure refresh token string.                |
+| `refresh_token_expires_at` | TIMESTAMP | Expiration time of the refresh token.       |
+| `failed_attempts`          | INT       | Count of consecutive failed login attempts. |
+| `timeout_until`            | TIMESTAMP | Timestamp indicating account lock duration. |
+| `access_token_expires_at`  | TIMESTAMP | Expiration time of the access token.        |
 
 ### `Notes` Table
-| Field         | Type    | Description                                         |
-|---------------|---------|-----------------------------------------------------|
-| `id`          | INT     | Unique note identifier                              |
-| `user_id`     | INT     | Foreign key referencing `User` table                |
-| `title`       | VARCHAR | Note title (stored in plaintext)                    |
-| `description` | TEXT    | Encrypted description + Authentication Tag + Nonce  |
 
-## Security Considerations
+| Field         | Type    | Description                                       |
+| ------------- | ------- | ------------------------------------------------- |
+| `id`          | INT     | Unique note identifier.                           |
+| `user_id`     | INT     | Foreign key referencing `User` table.             |
+| `title`       | VARCHAR | Note title (stored in plaintext).                 |
+| `description` | TEXT    | Encrypted description (ciphertext + tag + nonce). |
 
-### Potential Vulnerabilities and Mitigations
-- **Man-in-the-Middle Attacks**: Use HTTPS for all communications
-- **Brute Force Attacks**: Implement account lockout and rate limiting
-- **Key Compromise**: Use short-lived encryption keys, regularly rotate
-- **Password Strength**: Enforce strong password policies
+---
 
-### Recommended Enhancements
-- Implement multi-factor authentication
-- Add time-based key rotation
-- Use hardware security modules (HSM) for key management
-- Regular security audits and penetration testing
+## Flow and Architecture
 
-## Encryption Libraries and Recommendations
+### Registration Process
 
-- **Key Derivation**: Argon2 (Recommended)
-- **Hashing**: bcrypt or Argon2id
-- **Encryption**: AES-256-GCM
-- **Token**: JWT with short expiration
+1. **Enter Email and Usrname**:
+
+   - User provides email and username.
+   - backend generates an otp and send to the user via mail.
+
+2. **Verify Email**:
+
+   - User enters the otp manually.
+   - Backend validates the otp and marks `email_verified` as `true`.
+
+3. **Set Password**:
+   - User sets a password; backend hashes and stores it.
+
+### Login Process
+
+1. **Login Request**:
+
+   - User provides username and password.
+   - Backend checks `email_verified` status and validates credentials.
+   - If valid, user is prompted to set a master password if logging in for the first time.
+
+2. **Master Password Setup**:
+
+   - User sets a master password for encrypting and decrypting notes.
+   - Backend hashes and stores the master password.
+
+3. **Token Issuance**:
+   - Backend generates and updates access and refresh token details in the `Metadata` table.
+
+### Note Management
+
+1. **Create Note**:
+
+   - Encrypted notes data send from backend to frontend along with master pin.
+   - Backend derives the key from master pin after verifying the pin.
+   - The notes data then encrypted and stored in the database.
+
+2. **Retrieve Note**:
+
+   - User send the master pin , backend verify then generate the master key then dcrypt the data and send response the frontend.
+
+### Login Timeout Mechanism
+
+- After 3 failed login attempts, `timeout_until` is updated in the `Metadata` table:
+  - First lock: 3 minutes.
+  - Second lock: 30 minutes.
+  - Subsequent locks: Double the previous timeout duration.
+- On successful login, `failed_attempts` is reset to 0.
+
+### Token-Based Authentication
+
+- **Access Token**:
+  - Short-lived token for API requests.
+  - Expiration tracked in the `Metadata` table.
+- **Refresh Token**:
+  - Used to obtain a new access token when expired.
+  - Expiration: 24 hours, tracked in the `Metadata` table.
+
+---
+
+## Security Mechanisms
+
+1. **Password Hashing**:
+   - Argon2 or bcrypt for password and master password hashing.
+2. **Encryption**:
+   - AES-256-GCM for note encryption with authentication tags.
+3. **Key Derivation**:
+   - Argon2 for generating keys from master passwords.
+4. **HTTPS**:
+   - All communication is secured over HTTPS.
+5. **Token Expiry**:
+   - Token expirations are dynamically tracked in the `Metadata` table.
+
+---
 
 ## Conclusion
 
-This architecture provides a robust, multi-layered approach to securing user notes, ensuring confidentiality and integrity of sensitive information.
+The Secure Note offers a comprehensive, multi-layered security architecture to protect user data. The updated flow, database schema, and mechanisms ensure the confidentiality, integrity, and availability of sensitive information.

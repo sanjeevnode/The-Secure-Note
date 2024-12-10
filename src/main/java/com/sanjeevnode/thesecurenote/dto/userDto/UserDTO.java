@@ -16,7 +16,6 @@ public class UserDTO {
     private Long id;
     private String email;
     private String username;
-    private boolean emailVerified;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -25,7 +24,6 @@ public class UserDTO {
                 .id(user.getId())
                 .email(user.getEmail())
                 .username(user.getUsername())
-                .emailVerified(user.isEmailVerified())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();

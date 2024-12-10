@@ -33,11 +33,15 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String password;
 
-    @Column(length = 6)
-    private Integer masterPin;
+    private String masterPin;
 
     @Column(columnDefinition = "boolean default false")
     private boolean emailVerified;
+
+    @Column(columnDefinition = "int default 0")
+    private int failedLoginAttempts ;
+
+    private Long lockTime;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)

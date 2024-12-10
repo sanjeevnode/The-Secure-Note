@@ -1,14 +1,12 @@
 package com.sanjeevnode.thesecurenote.controller;
 
+import com.sanjeevnode.thesecurenote.dto.userDto.MasterPinRequest;
 import com.sanjeevnode.thesecurenote.service.UserService;
 import com.sanjeevnode.thesecurenote.utils.CustomResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/user")
@@ -21,5 +19,26 @@ public class UserController {
     public ResponseEntity<CustomResponse> getUser(@PathVariable String username) {
        CustomResponse response = userService.getUser(username);
          return ResponseEntity.status(response.getStatus()).body(response);
+    }
+
+    @PreAuthorize("hasAuthority('USER')")
+    @GetMapping("{userId}/checkMasterPin")
+    public ResponseEntity<CustomResponse> checkMasterPin(@PathVariable Long userId) {
+        CustomResponse response = userService.checkMasterPin(userId);
+        return ResponseEntity.status(response.getStatus()).body(response);
+    }
+
+    @PreAuthorize("hasAuthority('USER')")
+    @GetMapping("{userId}/verifyMasterPin")
+    public ResponseEntity<CustomResponse> verifyMasterPin(@PathVariable Long userId , @RequestBody MasterPinRequest masterPinRequest) {
+        CustomResponse response = userService.verifyMasterPin(userId, masterPinRequest);
+        return ResponseEntity.status(response.getStatus()).body(response);
+    }
+
+    @PreAuthorize("hasAuthority('USER')")
+    @PostMapping("{userId}/updateMasterPin")
+    public ResponseEntity<CustomResponse> updateMasterPin(@PathVariable Long userId , @RequestBody MasterPinRequest masterPinRequest) {
+        CustomResponse response = userService.updateMasterPin(userId, masterPinRequest);
+        return ResponseEntity.status(response.getStatus()).body(response);
     }
 }

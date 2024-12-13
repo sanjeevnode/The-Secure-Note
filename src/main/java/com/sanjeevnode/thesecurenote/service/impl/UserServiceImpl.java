@@ -22,13 +22,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public CustomResponse getUser(String username) {
-        try{
+        try {
             User user = userRepository.findByUsername(username).orElseThrow(
                     () -> new UsernameNotFoundException("User not found with username " + username)
             );
             return new CustomResponse(HttpStatus.OK, "User found", UserDTO.fromEntity(user));
-        }
-        catch(Exception e){
+        } catch (Exception e) {
             return new CustomResponse(HttpStatus.BAD_REQUEST, e.getMessage(), null);
         }
     }
@@ -63,7 +62,7 @@ public class UserServiceImpl implements UserService {
             User user = userRepository.findById(userId).orElseThrow(
                     () -> new UsernameNotFoundException("User not found with id " + userId)
             );
-            if(user.getMasterPin() == null){
+            if (user.getMasterPin() == null) {
                 return new CustomResponse(HttpStatus.BAD_REQUEST, "Master Pin not set", null);
             }
             if (passwordEncoder.matches(masterPinRequest.currentMasterPin(), user.getMasterPin())) {
@@ -82,6 +81,9 @@ public class UserServiceImpl implements UserService {
             User user = userRepository.findById(userId).orElseThrow(
                     () -> new UsernameNotFoundException("User not found with id " + userId)
             );
+            if (masterPinRequest.currentMasterPin() == null || masterPinRequest.newMasterPin() == null) {
+                return new CustomResponse(HttpStatus.BAD_REQUEST, "Current and new master pin required", null);
+            }
             if (user.getMasterPin() == null || passwordEncoder.matches(masterPinRequest.currentMasterPin(), user.getMasterPin())) {
                 user.setMasterPin(passwordEncoder.encode(masterPinRequest.newMasterPin()));
                 userRepository.save(user);

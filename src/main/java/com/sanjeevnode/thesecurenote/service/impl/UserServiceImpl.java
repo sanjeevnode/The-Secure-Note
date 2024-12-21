@@ -1,7 +1,7 @@
 package com.sanjeevnode.thesecurenote.service.impl;
 
-import com.sanjeevnode.thesecurenote.dto.userDto.MasterPinRequest;
-import com.sanjeevnode.thesecurenote.dto.userDto.UserDTO;
+import com.sanjeevnode.thesecurenote.dto.user.MasterPinRequest;
+import com.sanjeevnode.thesecurenote.dto.user.UserDTO;
 import com.sanjeevnode.thesecurenote.entity.User;
 import com.sanjeevnode.thesecurenote.repository.UserRepository;
 import com.sanjeevnode.thesecurenote.service.UserService;
@@ -19,6 +19,7 @@ import java.util.HashMap;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+
 
     @Override
     public CustomResponse getUser(String username) {
@@ -56,20 +57,23 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    public boolean verifyMasterPin(User user, String masterPin) throws Exception {
+        if (user.getMasterPin() == null) {
+            throw new Exception("Master Pin not set");
+        }
+        return passwordEncoder.matches(masterPin, user.getMasterPin());
+    }
+
     @Override
     public CustomResponse verifyMasterPin(Long userId, MasterPinRequest masterPinRequest) {
         try {
             User user = userRepository.findById(userId).orElseThrow(
                     () -> new UsernameNotFoundException("User not found with id " + userId)
             );
-            if (user.getMasterPin() == null) {
-                return new CustomResponse(HttpStatus.BAD_REQUEST, "Master Pin not set", null);
-            }
-            if (passwordEncoder.matches(masterPinRequest.currentMasterPin(), user.getMasterPin())) {
+            if (verifyMasterPin(user, masterPinRequest.currentMasterPin())) {
                 return new CustomResponse(HttpStatus.OK, "Master Pin verified", null);
-            } else {
-                return new CustomResponse(HttpStatus.BAD_REQUEST, "Invalid master pin", null);
             }
+            return new CustomResponse(HttpStatus.BAD_REQUEST, "Invalid master pin", null);
         } catch (Exception e) {
             return new CustomResponse(HttpStatus.BAD_REQUEST, e.getMessage(), null);
         }
@@ -81,16 +85,28 @@ public class UserServiceImpl implements UserService {
             User user = userRepository.findById(userId).orElseThrow(
                     () -> new UsernameNotFoundException("User not found with id " + userId)
             );
-            if (masterPinRequest.currentMasterPin() == null || masterPinRequest.newMasterPin() == null) {
-                return new CustomResponse(HttpStatus.BAD_REQUEST, "Current and new master pin required", null);
-            }
-            if (user.getMasterPin() == null || passwordEncoder.matches(masterPinRequest.currentMasterPin(), user.getMasterPin())) {
+
+            if (user.getMasterPin() == null) {
+                if (masterPinRequest.newMasterPin() == null) {
+                    return new CustomResponse(HttpStatus.BAD_REQUEST, "New master pin required", null);
+                }
                 user.setMasterPin(passwordEncoder.encode(masterPinRequest.newMasterPin()));
                 userRepository.save(user);
                 return new CustomResponse(HttpStatus.OK, "Master Pin updated", null);
-            } else {
-                throw new Exception("Invalid current master pin.");
             }
+
+            if (masterPinRequest.currentMasterPin() == null || masterPinRequest.newMasterPin() == null) {
+                return new CustomResponse(HttpStatus.BAD_REQUEST, "Current and new master pin required", null);
+            }
+
+            if (!passwordEncoder.matches(masterPinRequest.currentMasterPin(), user.getMasterPin())) {
+                return new CustomResponse(HttpStatus.BAD_REQUEST, "Invalid current master pin", null);
+            }
+
+            user.setMasterPin(passwordEncoder.encode(masterPinRequest.newMasterPin()));
+            userRepository.save(user);
+            return new CustomResponse(HttpStatus.OK, "Master Pin updated", null);
+
         } catch (Exception e) {
             return new CustomResponse(HttpStatus.BAD_REQUEST, e.getMessage(), null);
         }

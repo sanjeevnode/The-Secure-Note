@@ -43,6 +43,8 @@ public class User implements UserDetails {
 
     private Long lockTime;
 
+    private Long startLockTime;
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private UserRole role = UserRole.USER;

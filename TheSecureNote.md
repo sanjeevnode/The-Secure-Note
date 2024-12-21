@@ -26,24 +26,16 @@ The Secure Note is a robust password manager application designed to securely st
 ### `User` Table
 
 | Field             | Type    | Description                              |
-| ----------------- | ------- | ---------------------------------------- |
+|-------------------|---------|------------------------------------------|
 | `id`              | INT     | Unique user identifier.                  |
 | `email`           | VARCHAR | User's email address.                    |
 | `username`        | VARCHAR | Unique username .                        |
 | `email_verified`  | BOOLEAN | Indicates whether the email is verified. |
 | `password`        | VARCHAR | Hashed password of the user.             |
+| `failedAttempts`  | INT     | Failed Attempts count .                  |
+| `lockTime`        | double  | Lock Time .                              |
+| `staartLockTime`  | double  | Start of account lock.                   |
 | `master_password` | VARCHAR | Hashed master password.                  |
-
-### `Metadata` Table
-
-| Field                      | Type      | Description                                 |
-| -------------------------- | --------- | ------------------------------------------- |
-| `user_id`                  | INT       | Foreign key referencing `User` table.       |
-| `refresh_token`            | VARCHAR   | Secure refresh token string.                |
-| `refresh_token_expires_at` | TIMESTAMP | Expiration time of the refresh token.       |
-| `failed_attempts`          | INT       | Count of consecutive failed login attempts. |
-| `timeout_until`            | TIMESTAMP | Timestamp indicating account lock duration. |
-| `access_token_expires_at`  | TIMESTAMP | Expiration time of the access token.        |
 
 ### `Notes` Table
 

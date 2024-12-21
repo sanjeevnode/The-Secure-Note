@@ -1,4 +1,4 @@
-package com.sanjeevnode.thesecurenote.dto.userDto;
+package com.sanjeevnode.thesecurenote.dto.user;
 
 import com.sanjeevnode.thesecurenote.entity.User;
 import lombok.AllArgsConstructor;

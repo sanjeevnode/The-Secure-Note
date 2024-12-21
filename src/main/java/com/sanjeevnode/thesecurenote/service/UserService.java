@@ -1,6 +1,6 @@
 package com.sanjeevnode.thesecurenote.service;
 
-import com.sanjeevnode.thesecurenote.dto.userDto.MasterPinRequest;
+import com.sanjeevnode.thesecurenote.dto.user.MasterPinRequest;
 import com.sanjeevnode.thesecurenote.utils.CustomResponse;
 
 public interface UserService {

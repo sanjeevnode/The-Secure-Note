@@ -1,4 +1,4 @@
-package com.sanjeevnode.thesecurenote.dto.authDto;
+package com.sanjeevnode.thesecurenote.dto.auth;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -1,6 +1,6 @@
 package com.sanjeevnode.thesecurenote.controller;
 
-import com.sanjeevnode.thesecurenote.dto.userDto.MasterPinRequest;
+import com.sanjeevnode.thesecurenote.dto.user.MasterPinRequest;
 import com.sanjeevnode.thesecurenote.service.UserService;
 import com.sanjeevnode.thesecurenote.utils.CustomResponse;
 import lombok.RequiredArgsConstructor;
